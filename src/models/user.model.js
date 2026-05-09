@@ -1,43 +1,65 @@
+const mongoose = require("mongoose");
 
-const mongoose = require("mongoose")
+const E164_REGEX = /^\+[1-9]\d{7,14}$/; // e.g. +919876543210
 
+const addressSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, trim: true },
+    phone:    { type: String, trim: true },
+    line1:    { type: String, trim: true },
+    line2:    { type: String, trim: true, default: "" },
+    city:     { type: String, trim: true },
+    state:    { type: String, trim: true },
+    pincode:  { type: String, trim: true },
+    country:  { type: String, trim: true, default: "India" },
+  },
+  { _id: false }
+);
 
-const userSchema = new mongoose.Schema({
-
-    userName :{
-        type:String,
-        unique:[true, "Username already Exist"],
-        required: [true, "username is required"]
+const userSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      unique: true,
+      required: [true, "Email is required"],
+      lowercase: true,
+      trim: true,
     },
+    mobile: {
+      type: String,
+      unique: true,
+      required: [true, "Mobile number is required"],
+      trim: true,
+      validate: {
+        validator: (v) => E164_REGEX.test(v),
+        message: "Mobile must be in E.164 format (e.g. +919876543210)",
+      },
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [8, "Password must be at least 8 characters"],
+    },
+    image: {
+      type: String,
+      default: "",
+    },
+    role: {
+      type:    String,
+      enum:    { values: ["user", "admin"], message: 'Role must be "user" or "admin"' },
+      default: "user",
+      select:  false, // never leaked in API responses unless explicitly selected
+    },
+    verifiedEmail:  { type: Boolean, default: false },
+    verifiedMobile: { type: Boolean, default: false },
 
-     email:{
+    // Saved shipping address — pre-filled at checkout
+    savedAddress: { type: addressSchema, default: null },
 
-        type:String,
-         unique:[true, "Mail already Exist"],
-        required: [true, "Mail is required"]
+    passwordResetToken:   String,
+    passwordResetExpires: Date,
+  },
+  { timestamps: true }
+);
 
-     },
-
-      password:{
-
-        type:String,
-        required: [true, "passcode is required"]
-
-     },
-     bio:{
-
-        type:String,
-
-     },
-      Image:{
-
-        type:String,
-        default:"https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Fdefault-profile&psig=AOvVaw1UTOe3iXLKOD89jl8CIkSF&ust=1773089836430000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCJDfoL6YkZMDFQAAAAAdAAAAABAE"
-
-     }
-})
-
-
-const userModel = mongoose.model("User",userSchema)
-
-module.exports = userModel;
+module.exports = mongoose.model("User", userSchema);
