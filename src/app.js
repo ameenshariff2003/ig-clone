@@ -13,7 +13,19 @@ const app = express();
 
 // ─── Global middleware ────────────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.CLIENT_URL || "https://black-valley.netlify.app/",
+  origin: (origin, callback) => {
+    const allowed = [
+      "http://localhost:5173",
+      "https://black-valley.netlify.app",  // no trailing slash
+      process.env.CLIENT_URL?.replace(/\/$/, ""), // strip trailing slash
+    ].filter(Boolean)
+
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error(`CORS blocked: ${origin}`))
+    }
+  },
   credentials: true,
 }));
 app.use(express.json());
