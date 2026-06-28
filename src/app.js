@@ -20,7 +20,7 @@ const app = express();
 app.use(cors({
   origin: (origin, callback) => {
     const allowed = [
-      "http://localhost:5173",
+      // "http://localhost:5173",
       "https://black-valley.netlify.app",  // no trailing slash
       process.env.CLIENT_URL?.replace(/\/$/, ""), // strip trailing slash
     ].filter(Boolean)
