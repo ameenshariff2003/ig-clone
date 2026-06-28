@@ -14,10 +14,17 @@ const JWT_EXPIRY         = '7d'
 const BCRYPT_ROUNDS      = 12
 const E164_REGEX         = /^\+[1-9]\d{7,14}$/
 
+// In production (deployed over HTTPS), cookies must be Secure + SameSite=None
+// so they survive cross-site requests. In local dev (http://localhost), Secure
+// cookies are silently dropped by the browser unless the connection is HTTPS,
+// and SameSite=None requires Secure to be true — so on localhost we fall back
+// to SameSite=Lax with Secure off, which works fine for same-site dev requests.
+const isProd = process.env.NODE_ENV === 'production'
+
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure:   true,
-  sameSite: 'none',
+  secure:   isProd,
+  sameSite: isProd ? 'none' : 'lax',
   maxAge:   7 * 24 * 60 * 60 * 1000,
 }
 
@@ -103,7 +110,7 @@ const auth = {
     if (!email || !password)
       throw new AppError('Email and password are required.', 400)
 
-const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+role +password')
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+role +password')
 
     if (!user) {
       await bcrypt.hash(password, BCRYPT_ROUNDS) // timing-safe dummy
@@ -119,16 +126,16 @@ const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+
     if (!user.verifiedMobile)
       throw Object.assign(new AppError('Mobile not verified. Please check your SMS.', 403), { code: 'MOBILE_UNVERIFIED' })
 
-    issueToken(res, user._id)
+    const token = issueToken(res, user._id)
     res.status(200).json({
-      msg:  'Logged in successfully.',
+      msg:   'Logged in successfully.',
+      token,
       user: {
         id:           user._id,
         email:        user.email,
         mobile:       user.mobile,
         image:        user.image,
-        role:         user.role,         
-
+        role:         user.role,
         savedAddress: user.savedAddress ?? null,
       },
     })
@@ -166,13 +173,25 @@ const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+
     await OtpModel.deleteMany({ user: otpDoc.user, channel: 'email' })
 
     const user = await User.findById(otpDoc.user)
-    if (user.verifiedEmail && user.verifiedMobile) issueToken(res, user._id)
+    const sessionIssued = user.verifiedEmail && user.verifiedMobile
+    const token = sessionIssued ? issueToken(res, user._id) : undefined
 
     res.status(200).json({
       msg:            'Email verified successfully.',
       verifiedEmail:  true,
       verifiedMobile: user.verifiedMobile,
-      sessionIssued:  user.verifiedEmail && user.verifiedMobile,
+      sessionIssued,
+      ...(sessionIssued && {
+        token,
+        user: {
+          id:           user._id,
+          email:        user.email,
+          mobile:       user.mobile,
+          image:        user.image,
+          role:         user.role,
+          savedAddress: user.savedAddress ?? null,
+        },
+      }),
     })
   },
 
@@ -203,13 +222,25 @@ const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+
     await OtpModel.deleteMany({ user: otpDoc.user, channel: 'sms' })
 
     const user = await User.findById(otpDoc.user)
-    if (user.verifiedEmail && user.verifiedMobile) issueToken(res, user._id)
+    const sessionIssued = user.verifiedEmail && user.verifiedMobile
+    const token = sessionIssued ? issueToken(res, user._id) : undefined
 
     res.status(200).json({
       msg:            'Mobile verified successfully.',
       verifiedMobile: true,
       verifiedEmail:  user.verifiedEmail,
-      sessionIssued:  user.verifiedEmail && user.verifiedMobile,
+      sessionIssued,
+      ...(sessionIssued && {
+        token,
+        user: {
+          id:           user._id,
+          email:        user.email,
+          mobile:       user.mobile,
+          image:        user.image,
+          role:         user.role,
+          savedAddress: user.savedAddress ?? null,
+        },
+      }),
     })
   },
 

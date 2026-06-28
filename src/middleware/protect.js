@@ -2,9 +2,17 @@ const jwt      = require('jsonwebtoken')
 const User     = require('../models/user.model')
 const AppError = require('../utils/AppError')
 
-// Attach req.user from JWT cookie
+// Attach req.user from JWT — checks Bearer header first, falls back to cookie
 const protect = async (req, _res, next) => {
-  const token = req.cookies?.token
+  let token = null
+
+  const authHeader = req.headers.authorization
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1]
+  } else if (req.cookies?.token) {
+    token = req.cookies.token
+  }
+
   if (!token) return next(new AppError('Not authenticated. Please log in.', 401))
 
   try {

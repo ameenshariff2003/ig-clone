@@ -6,8 +6,13 @@ const cartRouter   = require("./routes/cartRoutes");
 const orderRouter  = require("./routes/orderRoutes");
 const adminRouter  = require("./routes/adminRoutes");
 const productRouter = require("./routes/productRoute");
+const shippingRouter = require("./routes/ShippingRoutes")
 const errorHandler = require("./middleware/errorHandler");
 const AppError     = require("./utils/AppError");
+
+
+
+
 
 const app = express();
 
@@ -42,6 +47,7 @@ app.use("/cart",    cartRouter);
 app.use("/orders",  orderRouter);
 app.use("/admin",   adminRouter);
 app.use("/product", productRouter);
+app.use("/admin/shipping",shippingRouter)
 
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 app.use((req, _res, next) => {

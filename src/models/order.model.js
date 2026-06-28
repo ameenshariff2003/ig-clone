@@ -55,6 +55,21 @@ const orderSchema = new mongoose.Schema({
 
   trackingId: String,
   adminNote:  String,
+
+   shiprocket: {
+    sr_order_id:  { type: String, default: null },
+    shipment_id:  { type: String, default: null },
+    awb:          { type: String, default: null },
+    courier_name: { type: String, default: null },
+    courier_id:   { type: Number, default: null },
+    label_url:    { type: String, default: null },
+    status: {
+      type:    String,
+      enum:    ['created', 'awb_assigned', 'pickup_scheduled', 'in_transit', 'delivered', 'cancelled', null],
+      default: null,
+    },
+    pushed_at: { type: Date, default: null },
+  },
 }, { timestamps: true })
 
 module.exports = mongoose.model('Order', orderSchema)
