@@ -6,7 +6,7 @@ const cartRouter   = require("./routes/cartRoutes");
 const orderRouter  = require("./routes/orderRoutes");
 const adminRouter  = require("./routes/adminRoutes");
 const productRouter = require("./routes/productRoute");
-const shippingRouter = require("./routes/shippingRoutes")
+const shippingRouter = require("./routes/ShippingRoutes")
 const errorHandler = require("./middleware/errorHandler");
 const AppError     = require("./utils/AppError");
 

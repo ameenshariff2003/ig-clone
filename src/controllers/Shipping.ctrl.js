@@ -7,7 +7,7 @@
 const Order        = require('../models/order.model')
 const AppError     = require('../utils/AppError')
 const sendEmail    = require('../services/email.services')
-const shiprocket   = require('../services/shiprocket.service')
+const shiprocket   = require('../services/Shiprocket.service')
 
 const shipping = {
 
