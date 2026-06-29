@@ -7,7 +7,7 @@
 
 const express      = require('express')
 const asyncHandler = require('../middleware/asyncHandler')
-const ctrl         = require('../controllers/shipping.ctrl')
+const ctrl         = require('../controllers/Shipping.ctrl')
 const { isAuthenticated, isAdmin }   = require("../middleware/isAdmin");
 
 const shippingRouter = express.Router()
